@@ -13,7 +13,7 @@ public class EASYBUY_PRODUCTDao {
 	
 	
 	/**
-	 * ²éÑ¯ËùÓĞ
+	 * æŸ¥è¯¢æ‰€æœ‰
 	 * @return
 	 */
 	public static ArrayList<EASYBUY_PRODUCT> selectAll(){
@@ -45,46 +45,76 @@ public class EASYBUY_PRODUCTDao {
 	}
 	
 	/**
-	 * Ãû×ÖÄ£ºı²éÑ¯
+	 * åå­—æ¨¡ç³ŠæŸ¥è¯¢
 	 * @return
 	 */
 	public static ArrayList<EASYBUY_PRODUCT> selectAllByName(String name){
 		ArrayList<EASYBUY_PRODUCT> list = new ArrayList<EASYBUY_PRODUCT>();
 		ResultSet rs1 = null;
 		ResultSet rs2 = null;
+		ResultSet rs3 = null;
 		Connection conn = Basedao.getconn();
 		PreparedStatement ps1 = null;
 		PreparedStatement ps2=null;
+		PreparedStatement ps3=null;		
 		try {
-			ps1 = conn.prepareStatement("select * from EASYBUY_PRODUCT where EP_NAME like ?");
-			ps1.setString(1, "%"+name+"%");
-			rs1 = ps1.executeQuery();
-			while(rs1.next()){
-				EASYBUY_PRODUCT p = new EASYBUY_PRODUCT(rs1.getInt("EP_ID"),
-										rs1.getString("EP_NAME"), 
-										rs1.getString("EP_DESCRIPTION"),
-										rs1.getInt("EP_PRICE"),
-										rs1.getInt("EP_STOCK"),
-										rs1.getInt("EPC_ID"),
-										rs1.getInt("EPC_CHILD_ID"),
-										rs1.getString("EP_FILE_NAME"));
+			ps3 = conn.prepareStatement("select * from EASYBUY_PRODUCT where  EPC_CHILD_ID in\r\n"
+					+ "		(select EPC_ID   from easybuy_product_category  where EPC_PARENT_ID in \r\n"
+					+ "			(select EPC_ID  from easybuy_product_category  where EPC_PARENT_ID=0 and EPC_NAME like ?))");
+			ps3.setString(1, "%"+name+"%");
+			rs3 = ps3.executeQuery();
+			while(rs3.next()){
+				EASYBUY_PRODUCT p = new EASYBUY_PRODUCT(rs3.getInt("EP_ID"),
+										rs3.getString("EP_NAME"), 
+										rs3.getString("EP_DESCRIPTION"),
+										rs3.getInt("EP_PRICE"),
+										rs3.getInt("EP_STOCK"),
+										rs3.getInt("EPC_ID"),
+										rs3.getInt("EPC_CHILD_ID"),
+										rs3.getString("EP_FILE_NAME"));
 				list.add(p);
+			}
+			if(!list.isEmpty()) {
+				System.out.println("æœç´¢çˆ¶ç±»æˆåŠŸï¼");
+				return list;
+			}else{
+			
+				ps2 = conn.prepareStatement("select * from EASYBUY_PRODUCT where  EPC_CHILD_ID IN (select EPC_ID from easybuy_product_category where EPC_NAME like ? and EPC_PARENT_ID!=0)");
+				ps2.setString(1, "%"+name+"%");
+				rs2 = ps2.executeQuery();
+				while(rs2.next()){
+					EASYBUY_PRODUCT p = new EASYBUY_PRODUCT(rs2.getInt("EP_ID"),
+											rs2.getString("EP_NAME"), 
+											rs2.getString("EP_DESCRIPTION"),
+											rs2.getInt("EP_PRICE"),
+											rs2.getInt("EP_STOCK"),
+											rs2.getInt("EPC_ID"),
+											rs2.getInt("EPC_CHILD_ID"),
+											rs2.getString("EP_FILE_NAME"));
+					list.add(p);
+				}
+			}
+			if(!list.isEmpty()){
+				System.out.println("æœç´¢å­ç±»æˆåŠŸï¼");
+				return list;
+			}else {
+				ps1 = conn.prepareStatement("select * from EASYBUY_PRODUCT where EP_NAME like ?");
+				ps1.setString(1, "%"+name+"%");
+				rs1 = ps1.executeQuery();
+				while(rs1.next()){
+					EASYBUY_PRODUCT p = new EASYBUY_PRODUCT(rs1.getInt("EP_ID"),
+											rs1.getString("EP_NAME"), 
+											rs1.getString("EP_DESCRIPTION"),
+											rs1.getInt("EP_PRICE"),
+											rs1.getInt("EP_STOCK"),
+											rs1.getInt("EPC_ID"),
+											rs1.getInt("EPC_CHILD_ID"),
+											rs1.getString("EP_FILE_NAME"));
+					list.add(p);
+				}
+				
 			}
 			
-			ps2 = conn.prepareStatement("select * from EASYBUY_PRODUCT where  EPC_ID IN (select EPC_ID from easybuy_product_category where EPC_NAME like ?)");
-			ps2.setString(1, "%"+name+"%");
-			rs2 = ps2.executeQuery();
-			while(rs2.next()){
-				EASYBUY_PRODUCT p = new EASYBUY_PRODUCT(rs2.getInt("EP_ID"),
-										rs2.getString("EP_NAME"), 
-										rs2.getString("EP_DESCRIPTION"),
-										rs2.getInt("EP_PRICE"),
-										rs2.getInt("EP_STOCK"),
-										rs2.getInt("EPC_ID"),
-										rs2.getInt("EPC_CHILD_ID"),
-										rs2.getString("EP_FILE_NAME"));
-				list.add(p);
-			}
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -95,7 +125,7 @@ public class EASYBUY_PRODUCTDao {
 		return list;
 	}
 	/**
-	 * ¸ù¾İid²éÑ¯µ¥¸ö
+	 * æ ¹æ®idæŸ¥è¯¢å•ä¸ª
 	 * @param id
 	 * @return
 	 */
@@ -128,7 +158,7 @@ public class EASYBUY_PRODUCTDao {
 	}
 	
 	/**
-	 * ¸ù¾İfid²éÑ¯ËùÓĞ
+	 * æ ¹æ®fidæŸ¥è¯¢æ‰€æœ‰
 	 * @param fid
 	 * @return
 	 */
@@ -162,7 +192,7 @@ public class EASYBUY_PRODUCTDao {
 	}
 	
 	/**
-	 * ¸ù¾İcid²éÑ¯ËùÓĞ
+	 * æ ¹æ®cidæŸ¥è¯¢æ‰€æœ‰
 	 * @param fid
 	 * @return
 	 */
@@ -264,11 +294,11 @@ public class EASYBUY_PRODUCTDao {
 			ps = conn.prepareStatement("select count(*) from EASYBUY_PRODUCT");
 			rs = ps.executeQuery();
 			if(rs.next()){
-				int sum = rs.getInt(1);//»ñµÃ±íµÄ×ÜĞĞÊı
+				int sum = rs.getInt(1);//è·å¾—è¡¨çš„æ€»è¡Œæ•°
 				if(sum%count==0){
-					tpage = sum/count;//×ÜĞĞÊıÊÇÃ¿Ò³ĞĞÊıµÄÕû±¶Êı
+					tpage = sum/count;//æ€»è¡Œæ•°æ˜¯æ¯é¡µè¡Œæ•°çš„æ•´å€æ•°
 				}else {
-					tpage = sum/count+1;//²»ÊÇÕû±¶ÊıÒª¼ÓÒ»
+					tpage = sum/count+1;//ä¸æ˜¯æ•´å€æ•°è¦åŠ ä¸€
 				}
 			}
 		} catch (SQLException e) {
@@ -290,11 +320,11 @@ public class EASYBUY_PRODUCTDao {
 			ps.setInt(1, fid);
 			rs = ps.executeQuery();
 			if(rs.next()){
-				int sum = rs.getInt(1);//»ñµÃ±íµÄ×ÜĞĞÊı
+				int sum = rs.getInt(1);//è·å¾—è¡¨çš„æ€»è¡Œæ•°
 				if(sum%count==0){
-					tpage = sum/count;//×ÜĞĞÊıÊÇÃ¿Ò³ĞĞÊıµÄÕû±¶Êı
+					tpage = sum/count;//æ€»è¡Œæ•°æ˜¯æ¯é¡µè¡Œæ•°çš„æ•´å€æ•°
 				}else {
-					tpage = sum/count+1;//²»ÊÇÕû±¶ÊıÒª¼ÓÒ»
+					tpage = sum/count+1;//ä¸æ˜¯æ•´å€æ•°è¦åŠ ä¸€
 				}
 			}
 		} catch (SQLException e) {
@@ -316,11 +346,11 @@ public class EASYBUY_PRODUCTDao {
 			ps.setInt(1, cid);
 			rs = ps.executeQuery();
 			if(rs.next()){
-				int sum = rs.getInt(1);//»ñµÃ±íµÄ×ÜĞĞÊı
+				int sum = rs.getInt(1);//è·å¾—è¡¨çš„æ€»è¡Œæ•°
 				if(sum%count==0){
-					tpage = sum/count;//×ÜĞĞÊıÊÇÃ¿Ò³ĞĞÊıµÄÕû±¶Êı
+					tpage = sum/count;//æ€»è¡Œæ•°æ˜¯æ¯é¡µè¡Œæ•°çš„æ•´å€æ•°
 				}else {
-					tpage = sum/count+1;//²»ÊÇÕû±¶ÊıÒª¼ÓÒ»
+					tpage = sum/count+1;//ä¸æ˜¯æ•´å€æ•°è¦åŠ ä¸€
 				}
 			}
 		} catch (SQLException e) {
@@ -342,11 +372,11 @@ public class EASYBUY_PRODUCTDao {
 			ps.setString(1, "%"+name+"%");
 			rs = ps.executeQuery();
 			if(rs.next()){
-				int sum = rs.getInt(1);//»ñµÃ±íµÄ×ÜĞĞÊı
+				int sum = rs.getInt(1);//è·å¾—è¡¨çš„æ€»è¡Œæ•°
 				if(sum%count==0){
-					tpage = sum/count;//×ÜĞĞÊıÊÇÃ¿Ò³ĞĞÊıµÄÕû±¶Êı
+					tpage = sum/count;//æ€»è¡Œæ•°æ˜¯æ¯é¡µè¡Œæ•°çš„æ•´å€æ•°
 				}else {
-					tpage = sum/count+1;//²»ÊÇÕû±¶ÊıÒª¼ÓÒ»
+					tpage = sum/count+1;//ä¸æ˜¯æ•´å€æ•°è¦åŠ ä¸€
 				}
 			}
 		} catch (SQLException e) {
@@ -358,7 +388,7 @@ public class EASYBUY_PRODUCTDao {
 		return tpage;
 	}
 	/**
-	 * ·ÖÒ³²éÑ¯
+	 * åˆ†é¡µæŸ¥è¯¢
 	 * @param cpage
 	 * @param count
 	 * @return
@@ -371,7 +401,7 @@ public class EASYBUY_PRODUCTDao {
 		String sql = "select * from EASYBUY_PRODUCT order by EP_ID desc limit ?,? ";
 		try {
 			ps = conn.prepareStatement(sql);
-			//ÉèÖÃÊı¾İÇø¼ä
+			//è®¾ç½®æ•°æ®åŒºé—´
 			ps.setInt(1, count*(cpage-1));
 			ps.setInt(2, count);
 			rs = ps.executeQuery();
@@ -396,7 +426,7 @@ public class EASYBUY_PRODUCTDao {
 		return list;
 	}
 	/**
-	 * fid·ÖÒ³²éÑ¯
+	 * fidåˆ†é¡µæŸ¥è¯¢
 	 * @param cpage
 	 * @param count
 	 * @return
@@ -409,7 +439,7 @@ public class EASYBUY_PRODUCTDao {
 		String sql = "select * from EASYBUY_PRODUCT where EPC_ID = ? order by EP_ID desc limit ?,?";
 		try {
 			ps = conn.prepareStatement(sql);
-			//ÉèÖÃÊı¾İÇø¼ä
+			//è®¾ç½®æ•°æ®åŒºé—´
 			ps.setInt(1, fid);
 			ps.setInt(2, count*(cpage-1));
 			ps.setInt(3, count);
@@ -436,7 +466,7 @@ public class EASYBUY_PRODUCTDao {
 	}
 	
 	/**
-	 * cid·ÖÒ³²éÑ¯
+	 * cidåˆ†é¡µæŸ¥è¯¢
 	 * @param cpage
 	 * @param count
 	 * @return
@@ -449,7 +479,7 @@ public class EASYBUY_PRODUCTDao {
 		String sql = "select * from EASYBUY_PRODUCT where EPC_CHILD_ID = ? order by EP_ID desc limit ?,?";
 		try {
 			ps = conn.prepareStatement(sql);
-			//ÉèÖÃÊı¾İÇø¼ä
+			//è®¾ç½®æ•°æ®åŒºé—´
 			ps.setInt(1, cid);
 			ps.setInt(2, count*(cpage-1));
 			ps.setInt(3, count);
@@ -476,7 +506,7 @@ public class EASYBUY_PRODUCTDao {
 	}
 	
 	/**
-	 * ¸ù¾İidÊı×é²éÑ¯µ¥¸ö£¬²¢·ÅÈë¼¯ºÏ
+	 * æ ¹æ®idæ•°ç»„æŸ¥è¯¢å•ä¸ªï¼Œå¹¶æ”¾å…¥é›†åˆ
 	 * @param id
 	 * @return
 	 */
@@ -513,7 +543,7 @@ public class EASYBUY_PRODUCTDao {
 	}
 	
 	/**
-	 * ²éÑ¯ÌØ¼ÛÉÌÆ·
+	 * æŸ¥è¯¢ç‰¹ä»·å•†å“
 	 * @return
 	 */
 	public static ArrayList<EASYBUY_PRODUCT> selectAllByT(){
@@ -548,7 +578,7 @@ public class EASYBUY_PRODUCTDao {
 	}
 	
 	/**
-	 * ²éÑ¯ÈÈÂôÉÌÆ·
+	 * æŸ¥è¯¢çƒ­å–å•†å“
 	 * @return
 	 */
 	public static ArrayList<EASYBUY_PRODUCT> selectAllByHot(){
